@@ -1,0 +1,149 @@
+<meta charset="utf-8">
+<script type="text/javascript" src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script type="text/javascript">
+
+function hideshow(which){
+    if (!document.getElementById) {
+        return;
+    }
+
+    if (which.style.display=="block") {
+        which.style.display="none";
+    }
+
+    else {
+        which.style.display="block";
+    }
+}
+
+function writeQuestions(var_arrays) {
+    var question_html = '';
+    
+    let column_1 = ['Joy', 'Admiration', 'Fear', 'Surprise'];
+    let column_2 = ['Sadness', 'Disgust', 'Anger', 'Interest'];
+    
+    for (var id = 0; id < var_arrays.length; id++) {
+        var var_array = var_arrays[id];
+        //First the emotion annotation
+        question_html += '<h2> Tweet '+ (id+1) + '</h2><div id="emotionQuestion_' +  id + '" style="margin-top: 20px;"><crowd-card style="padding:2% 2% 2% 2%;">' + var_array['tweet'] + '</crowd-card><p> Please select only the most notable emotions you think are expressed by writer in connection with <strong>&#64;Doe</strong> in the tweet. you can select the emotion here along with the emotion intensity(from 1-low, 2-medium, and 3-high intensity). <strong>If you sense no emotions are expressed, you can also select None.</strong></p><br><div class="row"><div class="column">';
+        // Now loop through first column
+        column_1.forEach((element) => {
+            question_html += '<crowd-checkbox name="entity_emotions_' + id + '" value="' + element + '">' + element + '</crowd-checkbox>';
+            question_html += '<crowd-slider name="' + element + '-conf_'+ id + '" min="1" max="3" step="1" pin="true" value=2 editable="true"></crowd-slider>';
+        });
+        question_html += ' </div><div class="column">'
+        // Now the second column of emotions
+        column_2.forEach((element) => {
+            question_html += '<crowd-checkbox name="entity_emotions_' + id + '" value="' + element + '">' + element + '</crowd-checkbox>';
+                question_html += '<crowd-slider name="' + element + '-conf_'+ id + '" min="1" max="3" step="1" pin="true" value=2 editable="true"></crowd-slider>';
+        });
+        question_html += ' </div></div>';
+        
+        // Now None option
+        question_html += '&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<crowd-checkbox name="no_emotions_' + id + '" value="None">None</crowd-checkbox><br><br>';
+        
+        // Now the entity question_html
+        question_html += '</div><div id="entityQuestion" style="margin-top: 20px;">Now answer the following questions:<br><br>Is the tweet primarily about <strong>&#64;Doe</strong>, or does <strong>&#64;Doe</strong> play a significant role in this tweet?<br><label><input name="predom_' + id + '" type="radio" value="predom" checked>Yes&emsp;</label><label><input name="predom_' + id +'" type="radio" value="not_predom">No&emsp;</label><label><input name="predom_' + id +'" type="radio" value="dunno_predom" required>Can\'t say&emsp;</label></div>';
+        
+        // Now the warmth question_html
+        question_html += ' <div id="warmthQuestion" style="margin-top: 20px;">How does the writer feel in general about <strong>&#64;Doe</strong>?<br><label><input type="radio" value="warm"  name="feel_' + id + '">Warmly&emsp;</label><label><input type="radio" value="cold"  name="feel_' + id + '">Coldly&emsp;</label><label><input type="radio" value="neutral"  name="feel_' + id + '" checked>Neutrally&emsp;</label><label><input type="radio" value="mixed"  name="feel_' + id + '">Mixed&emsp;</label><label><input type="radio" value="dunno"  name="feel_' + id +'" required>Can\'t say&emsp;</label></div>';
+
+        // Now the approval question_html
+        question_html += ' <div id="appQuestion" style="margin-top: 20px;">How does the writer feel in general about <strong>&#64;Doe</strong>\'s actions/behavior?<br><label><input type="radio" value="app"  name="app_' + id + '">Approval&emsp;</label><label><input type="radio" value="disapp" name="app_' + id + '">Disapproval&emsp;</label><label><input type="radio" value="neutral"  name="app_' + id + '" checked>Neutral&emsp;</label><label><input type="radio" value="mixed"  name="app_' + id + '">Mixed&emsp;</label><label><input type="radio"  value="dunno" name="app_' + id +'" required>Can\'t say&emsp;</label></div>';
+    }
+    
+    
+    // Now add the comment box
+    question_html += '<div id="commentsBox" style="margin-top: 20px;"><h3>Comments</h3><crowd-text-area style="border:1px solid black;" name="comments" rows="4"></crowd-text-area></div>';
+    
+    document.getElementById("questions").innerHTML = question_html;
+}
+
+$(document).ready(function() {
+    var var_arrays = jQuery.parseJSON('${var_arrays}');
+    
+    writeQuestions(var_arrays);
+    
+    for (var id = 0; id < var_arrays.length; id++) {
+    let groupCheck = Array.from(document.getElementsByName("entity_emotions_" + id))
+    let sepCheck =  document.getElementsByName("no_emotions_" + id)[0]
+    
+    groupCheck.forEach(element => {
+        element.onchange = () => {
+            if (element.checked) {
+                sepCheck.checked = false;
+            }
+        }
+    });
+    
+    sepCheck.onchange = () => {
+        if (sepCheck.checked) {
+            groupCheck.forEach(element => {
+                element.checked = false;
+            })
+        }
+    }
+    }
+});
+
+</script>
+
+<style>
+.row { display: flex; }
+
+.column { flex: 50%; }
+
+html {margin-left: 5%; margin-right: 5%;}
+
+.inset-ins {background-color: #f1f1f1; padding: 3%; border-radius: 3%;}
+</style>
+
+<crowd-form>   
+    <h3>We are interested in how the writer of a tweet feels towards/in connection with the people they&#39;re talking about. You will be asked to annotate for emotions in 3 tweets - the tweets are shown below the instructions.</h3>
+     <h3><a href="javascript:hideshow(document.getElementById('all_instructions'))">Click here to hide/show instructions, emotion wheel and examples</a></h3>
+    <div class="inset-ins">
+    
+    <div id="all_instructions" style="margin-top: 20px; font-size: 16px;display: block;">
+    <h2> Instructions </h2>
+        <div class="row">
+            <div class="column">
+                <ul >
+                    <li><strong>Read</strong> the tweet carefully. We are interested in <strong>emotions expressed in tweets by the writer towards, or in connection with a person in the tweet</strong> using the emotion wheel on the right.</li><br>
+                    <li>To reduce bias, in addition to not revealing the name of person tweeting, we have replaced the person's name in the tweet with <strong>&#64;Doe</strong>. </li><br>
+                    <li>The emotions are arranged based on their relationship to each other: joy is opposite of sadness, fear the opposite of anger, anger is closer emotionally to disgust, etc. The words themselves aren't important - use them as guides to understand what emotion is being expressed <strong>in connection with the person &#64;Doe</strong>.</li><br>
+                    <li>Select all emotions that you think the writer/speaker feels in connection with <strong>&#64;Doe</strong> in the tweet. Use the slider to indicate the <strong>intensity</strong> of the emotion from Low(1) to High(3). If you sense no emotions are expressed, you can also select None. <strong>You must either select None, or one or more emotions</strong></li><br>
+                    <li>After annotating for emotions, <strong>you must answer the 3 multiple choice single answer questions that follow</strong>.</li>
+            </ul>
+        </div>
+        <div class = "column" style="padding:1%;">
+        <img width="100%" alt="Plutchik wheel showing the emotion labels" src="https://venkatasg.net/files/plutchik.png">
+        </div>
+    </div>
+        <p>Here are examples of each of the 8 emotion labels(in bold caps) in our wheel being expressed in connection with the person (<strong>&#64;Doe</strong>) by the speaker through tweets. The examples aren't exhaustive and more than one emotion can be expressed through a tweet.</p>
+            <ul>
+                <li><strong>JOY</strong>: Proud to work alongside <strong>&#64;Doe</strong> on critical legislation to solve the border crisis and #StopObamasAmnesty!</li><br>
+                <li><strong>ADMIRATION</strong>: Too few members of Congress have the courage to speak their mind like <strong>&#64;Doe</strong>. History will judge us on our silence. Silence is complicity. I applaud and #StandWithMaxine &#64;RepMiaLove </li><br>
+                <li><strong>FEAR</strong>: <strong>&#64;Doe</strong> 's approach to international health cooperation is simply reckless. Today 100 Members of Congress joined &#64;RepJudyChu &#64;RepMcGovern &amp; me in calling for renewed cooperation w/ the international community to address the current crisis &amp; future pandemics. </li><br>
+                <li><strong>SURPRISE</strong>: While so many are appropriately outraged over &#64;RepMaxineWaters' latest U...N...H...I...N...G...E...D anti-Trump rant, it's worth pointing out that MO State Senator <strong>&#64;Doe</strong> is actually STILL IN OFFICE after her "I hope Trump is assassinated" comment nearly one year ago. </li><br>
+                <li><strong>SADNESS</strong>: This is devastating. Otto was a beloved friend, devoted husband, and a community leader. My heart goes out to <strong>&#64;Doe</strong> and her entire family during this difficult time.</li><br>
+                <li><strong>DISGUST</strong>: If <strong>&#64;Doe</strong> can get her hair done in person, Congress can vote in person. Further, if &#64;JoeBiden can vote in person, Americans should be encouraged to cast their vote in person. </li><br>
+                <li><strong>ANGER</strong>: With more than 36 million Americans out of a job, <strong>&#64;Doe</strong> and House Democrats should stop wasting time on radical legislation that will never become law and instead focus on ways to safely re-open our economy and get Americans back to work.</li><br>
+                <li><strong>INTEREST</strong>: <strong>&#64;Doe</strong> visits the Sister Annunciata Bethel Senior Center in #NY13 during his #WeekInTheBronx.</li><br>
+            </ul>
+    </div>
+    </div>
+
+    <div id="questions" style="font-size: 16px;">
+   
+ 
+    </div>
+
+
+</crowd-form>
+
+
+
+<section>
+  <input name="dummy", type="hidden"/>
+</section>
