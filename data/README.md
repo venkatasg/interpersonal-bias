@@ -7,6 +7,9 @@
 - *Date*: date of tweet
 - *group*: in-group(1) or out-group(-1)
 - *party*: Democrat or Republican
+
+and the following emotion label colums, which have either True or False:
+
 - *Admiration*
 - *Anger*
 - *Disgust*
