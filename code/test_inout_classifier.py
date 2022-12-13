@@ -23,23 +23,50 @@ loggingd.disable_progress_bar()
  # Set logging to show only errors for transformers
 loggingt.set_verbosity_error()
 
+# Turn off chained assignment warnings from pandas
+pd.set_option('chained_assignment',None)
+
 def replace_ent(tweet, ent):
-    'Find entity name in tweet and replace with placeholder' 
-    
+    'Find entity name in tweet and replace with placeholder'
+
     pattern = re.compile(r"\@" + ent, re.IGNORECASE)
     return re.sub(pattern, "@USER", tweet)
 
 if __name__== "__main__":
     # initialize argument parser
-    description = 'Script to classify sentences as advice or non-advice'
+    description = 'Script to classify sentences as in-group or out-group'
     parser = argparse.ArgumentParser(description=description)
-    
-    parser.add_argument('--batch', type=int, default=64, help='Batch size for training')
-    parser.add_argument('--seed', type=int, default=1, help='Random seed')
-    parser.add_argument('--epoch', type=int, default=1, help='Epoch on which to test')
-    parser.add_argument('--model', type=str, default="bertweet", help='Which pretrained LM to use as default')
-    parser.add_argument('--dev', action='store_true', help='test on dev set')
-    parser.add_argument('--lr_tr', type=float, default=2e-5, help='Set learning rate for BERT parameters')
+
+    parser.add_argument(
+        '--batch',
+        type=int,
+        default=64,
+        help='Batch size for training'
+    )
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=1,
+        help='Random seed'
+    )
+    parser.add_argument(
+        '--dev',
+        action='store_true',
+        help='test on dev set'
+    )
+    parser.add_argument(
+        '--data_path',
+        type=str,
+        required=True,
+        help='Path to data'
+    )
+    parser.add_argument(
+        '--model_path',
+        type=str,
+        required=True,
+        help='Path to saved model to use'
+    )
+
     args = parser.parse_args()
 
     # Free up memory
@@ -63,42 +90,37 @@ if __name__== "__main__":
     np.random.seed(args.seed)
     np.random.RandomState(args.seed)
 
-    # Initialise model, then load weights
-    if args.lr_tr != 0:
-        path_append = ""
-    else:
-        path_append = "_noft"
-    model = AutoModelForSequenceClassification.from_pretrained("./finetuned-model_" + args.model + "_seed_" + str(args.seed) + "_epoch_" + str(args.epoch) + path_append +"/").to(device)
+    # Initialise model and load weights
+    model = AutoModelForSequenceClassification.from_pretrained(args.model_path).to(device)
     # Load the AutoTokenizer with a normalization mode if the input Tweet is raw
-    tokenizer = AutoTokenizer.from_pretrained("finetuned-model_" + args.model + "_seed_" + str(args.seed) + "_epoch_" + str(args.epoch) + path_append +"/")
-    
-    df = pd.read_csv('../data-annotation/maj_df_split.tsv', sep='\t')
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path)
+
+    df = pd.read_csv(args.data_path, sep='\t')
     df['tweet_clean'] = df.apply(lambda x: replace_ent(tweet=x['tweet'], ent=x['mentname']), axis=1)
     df['group'] = df['group'].apply(lambda x: 0 if x==-1 else 1)
-     
-    
-    # df = df.drop(df[df['Split'] == 'train'].sample(frac=.5).index)
+
+
     data = Dataset.from_pandas(df)
     data = data.map(lambda x: tokenizer(x['tweet'], truncation=True, padding="max_length", max_length=128), batched=True)
-    
+
     if args.dev:
         test_df = df[df['Split']=='dev']
         test_data = data.filter(lambda x: x['Split']=='dev')
     else:
         test_df = df[df['Split']=='test']
         test_data = data.filter(lambda x: x['Split']=='test')
-    
+
     test_data.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask', 'group'])
 
     test_dataloader = torch.utils.data.DataLoader(test_data, batch_size=args.batch, shuffle=False)
 
     model.zero_grad()
     model.eval()
-    
-     # Tracking variables 
+
+     # Tracking variables
     pred_labels = np.array([])
     true_labels = np.array([])
-    
+
     with torch.no_grad():
         for _, input_dict in enumerate(test_dataloader):
             b_input_ids = input_dict['input_ids'].to(device)
@@ -112,19 +134,23 @@ if __name__== "__main__":
 
             pred_labels = np.append(pred_labels, pred_flat)
             true_labels = np.append(true_labels, labels_flat)
-    
-    test_df['preds'] = pred_labels
-    
+
+    test_df.loc[:, 'pred'] = pred_labels.astype(int)
+
     fscore = f1_score(true_labels, pred_labels, average='micro')
     print('\nF1 Score:', np.round(fscore,3))
-    
-    adm_f1=f1_score(test_df[test_df['Admiration']==True]['group'], test_df[test_df['Admiration']==True]['preds'])
-    print('F1 score on admiration tweets', np.round(adm_f1, 3))
-    
-    ang_f1=f1_score(test_df[test_df['Anger']==True]['group'], test_df[test_df['Anger']==True]['preds'])
-    print('F1 score on anger tweets', np.round(ang_f1, 3))
 
-    dis_f1=f1_score(test_df[test_df['Disgust']==True]['group'], test_df[test_df['Disgust']==True]['preds'])
-    print('F1 score on disgust tweets', np.round(dis_f1, 3))
+    for emot in ['Admiration', 'Anger', 'Disgust', 'Joy', 'Sadness', 'Interest', 'Fear', 'Surprise']:
+        f1s = f1_score(test_df[test_df[emot]==True]['group'], test_df[test_df[emot]==True]['pred'], average='micro', zero_division=0)
+        print(emot + ' F1 score:', np.round(f1s, 3))
+
+    r_f1 = f1_score(test_df[test_df['party']=='R']['group'], test_df[test_df['party']=='R']['pred'], average='micro')
+    print('F1 score on republican tweets', np.round(r_f1, 3))
+
+    d_f1 = f1_score(test_df[test_df['party']=='D']['group'], test_df[test_df['party']=='D']['pred'], average='micro')
+    print('F1 score on democrat tweets', np.round(d_f1, 3))
 
     print("===================================================")
+
+    if args.dev:
+        test_df.to_csv('predictions.tsv', sep='\t', index=False)

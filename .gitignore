@@ -1,2 +1,5 @@
 code/.DS_Store
 *.DS_Store
+*.zip
+.ipynb_checkpoints
+code/Notebooks/*.tsv
