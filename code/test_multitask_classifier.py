@@ -146,7 +146,7 @@ if __name__== "__main__":
     true_zero = [np.all(x==0) for x in references_emot]
     pred_zero = [np.all(x==0) for x in predictions_emot]
     null_f1 = f1_score(true_zero, pred_zero, average='micro', zero_division=0)
-    print("\nNull emotions F1 score:", np.round(null_f1, 3))
+    print("\nNull emotions F1 score:", np.round(null_f1*100, 3))
 
     test_df.loc[:, 'group_pred'] = predictions_group
     test_df.loc[:, 'emot_pred'] = predictions_emot.tolist()

@@ -137,7 +137,7 @@ if __name__== "__main__":
     
     true_zero = [np.all(x==0) for x in references]
     pred_zero = [np.all(x==0) for x in predictions]
-    null_f1 = f1_score(true_zero, pred_zero)
+    null_f1 = f1_score(true_zero, pred_zero, average='micro', zero_division=0)
     print("\nNull emotions F1 score:", np.round(null_f1*100, 1))
     
     test_df.loc[:, 'pred'] = predictions.tolist()
