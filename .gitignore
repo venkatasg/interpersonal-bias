@@ -1,5 +1,6 @@
-code/.DS_Store
 *.DS_Store
 *.zip
-.ipynb_checkpoints
+*.ipynb_checkpoints
 code/Notebooks/*.tsv
+data/cong_data.tsv
+__pycache__
