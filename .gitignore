@@ -4,3 +4,5 @@
 code/Notebooks/*.tsv
 data/cong_data.tsv
 __pycache__
+*.sh
+*.numbers

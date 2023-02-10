@@ -1,1 +1,0 @@
-`cong-emotion.html` is the HTML template used for annotation on Amazon MTurk.
