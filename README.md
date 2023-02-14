@@ -2,7 +2,7 @@
 
 This repository contains code and data for the paper [How people talk about each other: Modeling Generalized Intergroup Bias and Emotions](https://arxiv.org/abs/2209.06687), which will be presented at [EACL 2023](https://2023.eacl.org).
 
-Our goal with this paper was to situate bias in language use through the lens of interpersonal relationships between the speaker and target of an utterance, as well as the interpersonal emotion expressed by speaker towards the target.
+Our goal with this paper was to situate bias in language use through the lens of interpersonal relationships between the speaker and target of an utterance anchored with the interpersonal emotion expressed by the speaker towards the target.
 
 ## Code
 
