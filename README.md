@@ -18,7 +18,7 @@ The dataset of tweets, with annotations detailed in the paper, is in the `data` 
 Please cite our work as follows, or use the corresponding `bib` entry:
 
 ```
-@venkat2023{
+@inproceedings{venkat2023,
     title = {How people talk about each other: Modeling Generalized Intergroup Bias and Emotions},
     author = {Govindarajan, Venkata S and Atwell, Katherine and Sinno, Barea and Alikhani, Malihe and Beaver, David I. and Li, Junyi Jessy},
     booktitle = {Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics},
