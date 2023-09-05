@@ -11,7 +11,7 @@ Scripts and notebooks used for modeling and analysis are present in the `code` f
 
 ## Data
 
-The dataset of tweets, with annotations detailed in the paper, is in the `data` folder. The full annotation protocol is also present in this folder (`cong-emotion.html`).
+The dataset of tweets, with annotations detailed in the paper, is in the `data` folder. The full annotation protocol is also present in this folder (`cong-emotion.html`). Only tweet IDs are listed here &mdash; contact us if you need access to the full dataset.
 
 ## Citation
 
